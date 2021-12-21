@@ -39,8 +39,20 @@ export class TokenService {
     };
   }
 
-  saveToken(token: string, user: UserEntity, tokenType: TokenType) {
-    const tokenDoc = this.tokenRepo.create({ token, user, type: tokenType });
+  async saveToken(token: string, user: UserEntity, tokenType: TokenType) {
+    let tokenDoc = await this.tokenRepo.findOne({
+      where: { user },
+    });
+    if (tokenDoc) {
+      tokenDoc.token = token;
+      tokenDoc.active = true;
+    } else {
+      tokenDoc = this.tokenRepo.create({
+        token,
+        user,
+        type: tokenType,
+      });
+    }
     return this.tokenRepo.save(tokenDoc);
   }
 
@@ -67,10 +79,14 @@ export class TokenService {
             user: payload.sub,
           },
         });
+
         if (!tokenDoc) {
           throw new Error('Token does not exist');
         }
-
+        if (type === TokenType.VerifyEmailToken) {
+          tokenDoc.active = false;
+        }
+        await this.tokenRepo.save(tokenDoc);
         return tokenDoc.user;
       }
       return await this.userRepo.findOne({ where: { id: payload.sub } });

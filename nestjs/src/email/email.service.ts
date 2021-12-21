@@ -19,8 +19,8 @@ export class EmailService {
   ) {
     mailService.setApiKey(this.configService.get(constants.SENDGRID_API_KEY));
     this.hostUrl = this.configService.get('host.url');
-    this.verificationEmailUrl = `${this.hostUrl}/v1/auth/verify-email?token=`;
-    this.resetPasswordUrl = `${this.hostUrl}/v1/auth/reset-password?token=`;
+    this.verificationEmailUrl = `${this.hostUrl}/auth/verify-email?token=`;
+    this.resetPasswordUrl = `${this.hostUrl}/auth/reset-password?token=`;
   }
   /**
    * Send email to verify

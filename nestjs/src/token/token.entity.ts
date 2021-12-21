@@ -19,6 +19,9 @@ export class Tokens {
   @Column({ enum: TokenType, type: 'enum' })
   type: TokenType;
 
+  @Column({ default: true })
+  active: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 
