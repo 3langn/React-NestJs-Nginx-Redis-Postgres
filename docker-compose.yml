@@ -84,6 +84,7 @@ services:
   frontend:
     image: frontend
     container_name: frontend
+    build: ./reactjs
     ports:
       - 3000:3000
     env_file:

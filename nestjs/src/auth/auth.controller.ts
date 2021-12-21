@@ -7,21 +7,12 @@ import {
   Logger,
   Post,
   Query,
-  Request,
   Res,
-  UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
-import { EmailService, SendMailVerifyDto } from 'src/email/email.service';
-import { RolesEnum, TokenType } from '../common/constants/enum';
-import { Roles } from '../common/decorators/roles.decorator';
-import { RolesGuard } from '../common/guards/roles.guard';
+import { EmailService } from 'src/email/email.service';
+import { TokenType } from '../common/constants/enum';
 import { TokenService } from '../token/token.service';
 import { UserLoginDto } from '../user/dto/user-login.dto';
 import { UserRegisterDto } from '../user/dto/user-register.dto';
@@ -30,7 +21,6 @@ import { Serialize } from '../user/users.interceptor';
 import { UserService } from '../user/users.service';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/login-response.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 @ApiTags('Authentication')
 @Controller('/auth')
 export class AuthController {
@@ -51,11 +41,11 @@ export class AuthController {
   async registerUser(@Body() userRegisterDto: UserRegisterDto) {
     try {
       const user = await this.userService.createUserRegister(userRegisterDto);
-      // const emailToken = await this.tokenService.generateVerifyEmailToken(user);
-      // await this.emailService.sendVerificationEmail({
-      //   to: userRegisterDto.email,
-      //   token: emailToken,
-      // });
+      const emailToken = await this.tokenService.generateVerifyEmailToken(user);
+      await this.emailService.sendVerificationEmail({
+        to: userRegisterDto.email,
+        token: emailToken,
+      });
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);
