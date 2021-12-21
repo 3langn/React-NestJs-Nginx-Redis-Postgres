@@ -1,0 +1,9 @@
+* {
+  margin: 0;
+  font-family: Gilroy;
+}
+
+@font-face {
+  font-family: Gilroy;
+  src: url("fonts/Gilroy-Bold.ttf");
+}
