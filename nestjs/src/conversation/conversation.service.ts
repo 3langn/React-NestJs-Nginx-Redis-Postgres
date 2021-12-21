@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MessageEntity } from 'src/conversation/entity/message';
+import { RedisCacheService } from 'src/shared/redis-cache/redis-cache.service';
 import { UserEntity } from 'src/user/user';
 import { In, Like, Repository } from 'typeorm';
 import { ConversationEntity } from './entity/conversation';
@@ -15,6 +16,7 @@ export class ConversationService {
     private readonly messageRepo: Repository<MessageEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    private readonly redisCacheService: RedisCacheService,
   ) {}
 
   async getConversations(user: UserEntity): Promise<ConversationEntity[]> {
@@ -61,9 +63,17 @@ export class ConversationService {
       .createQueryBuilder('messages')
       .leftJoinAndSelect('messages.conversation', 'conversations')
       .leftJoinAndSelect('messages.sender', 'users')
-      .addSelect('users.id')
+      .select([
+        'users.id',
+        'users.username',
+        'users.profilePicture',
+        'messages.id',
+        'messages.content',
+        'messages.created_at',
+      ])
       .andWhere('conversations.id = :conversationId', { conversationId })
       .getMany();
+    this.logger.debug(JSON.stringify(messages));
     return messages;
   }
 
@@ -84,7 +94,12 @@ export class ConversationService {
       });
 
       const message = await this.messageRepo.save(messageEntity);
-
+      await this.redisCacheService.setToRedis(
+        'message' + conversationId,
+        async () => {
+          return message;
+        },
+      );
       return message;
     } catch (error) {
       this.logger.error(error);

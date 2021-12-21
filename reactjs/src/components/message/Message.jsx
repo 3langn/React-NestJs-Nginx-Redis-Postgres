@@ -7,7 +7,7 @@ export default function Message({ own, message }) {
       <div className="messageTop">
         <img
           className="messageImg"
-          src="https://static.lag.vn/upload/news/20/10/12/12-dang-bien-hinh-cua-goku-trong-dragon-ball-12_CDOU.png?w=800&encoder=wic&subsampling=444"
+          src={message.sender.profilePicture}
           alt=""
         />
         <p className="messageText">{message.content}</p>

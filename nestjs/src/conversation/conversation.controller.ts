@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RedisCacheService } from 'src/shared/redis-cache/redis-cache.service';
 import { UserService } from 'src/user/users.service';
 import { ConversationService } from './conversation.service';
 
@@ -23,6 +24,7 @@ export class ConversationController {
   constructor(
     private readonly conversationService: ConversationService,
     private readonly userService: UserService,
+    private readonly redisCacheService: RedisCacheService,
   ) {}
 
   @Get('/')
@@ -47,7 +49,15 @@ export class ConversationController {
 
   @Get('/:conversationId')
   async getMessages(@Param('conversationId') conversationId: string) {
-    const messages = await this.conversationService.getMessages(conversationId);
+    const messages = await this.redisCacheService.setOrGetCacheList(
+      'message' + conversationId,
+      async () => {
+        const messages = await this.conversationService.getMessages(
+          conversationId,
+        );
+        return messages;
+      },
+    );
     return messages;
   }
 
@@ -57,10 +67,13 @@ export class ConversationController {
     @Body() message: { content: string },
     @Request() req,
   ) {
-    return await this.conversationService.createMessage(
-      conversationId,
+    this.logger.debug(message);
+
+    const messagePayload = await this.conversationService.createMessage(
+      'conversationId',
       message.content,
       req.user.id,
     );
+    return messagePayload;
   }
 }

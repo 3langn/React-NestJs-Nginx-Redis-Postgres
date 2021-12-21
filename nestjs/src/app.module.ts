@@ -10,7 +10,6 @@ import { DatabaseConfig } from './config/database.config';
 import { PostModule } from './post/post.module';
 import { UploadModule } from './upload/upload.module';
 import { RedisCacheModule } from './shared/redis-cache/redis-cache.module';
-import { NotificationModule } from './notification/notification.module';
 import { ChatGateway } from './chat/chat.gateway';
 import { ChatModule } from './chat/chat.module';
 import { EmailModule } from './email/email.module';
@@ -29,7 +28,6 @@ import { ConversationModule } from './conversation/conversation.module';
     PostModule,
     UploadModule,
     RedisCacheModule,
-    NotificationModule,
     ChatModule,
     EmailModule,
     ConversationModule,

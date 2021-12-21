@@ -19,6 +19,8 @@ export default function Messenger() {
   const [newMessage, setNewMessage] = useState("");
   const [arrivalMessage, setArrivalMessage] = useState();
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [friend, setFriend] = useState();
+
   const socket = useRef();
   const { user, token } = useContext(AuthContext);
   const scrollRef = useRef();
@@ -51,9 +53,13 @@ export default function Messenger() {
 
   useEffect(() => {
     socket.current.on("users", (users) => {
-      setOnlineUsers(
-        user.following.filter((f) => users.some((u) => u.id === f))
-      );
+      const onlineUsers = user.following.filter((f) => {
+        return users.some((u) => {
+          return u === f;
+        });
+      });
+      console.log("Online Users: " + JSON.stringify(onlineUsers));
+      setOnlineUsers(onlineUsers);
     });
   }, [user]);
 
@@ -63,8 +69,10 @@ export default function Messenger() {
         const res = await axios.get("/conversations/");
         setConversations(res.data);
         if (curr) {
-          const currChat = conversations.find((c) => {
-            return c.members.some((m) => m.id === curr);
+          const currChat = res.data.find((c) => {
+            return c.members.some((m) => {
+              return m.id === curr;
+            });
           });
           setCurrentChat(currChat);
         } else {
@@ -83,11 +91,16 @@ export default function Messenger() {
       console.log("Room: " + currentConversation?.id);
       try {
         const res = await axios.get("/conversations/" + currentConversation.id);
-        setMessages(res.data);
+        setMessages(
+          res.data.sort((p1, p2) => {
+            return new Date(p1.created_at) - new Date(p2.created_at);
+          })
+        );
       } catch (err) {
         console.log(err);
       }
     };
+    setFriend(currentConversation?.members.find((m) => m.id !== user.id));
 
     getMessages();
   }, [currentConversation]);
@@ -133,12 +146,15 @@ export default function Messenger() {
             {conversations?.map((c) => (
               <div
                 onClick={() => {
-                  const friendId = c.members.find((f) => f.id !== user.id);
-                  history.push("/messenger/" + friendId.id);
+                  history.push("/messenger/" + friend.id);
                   setCurrentChat(c);
                 }}
               >
-                <Conversation conversation={c} currentUser={user} />
+                <Conversation
+                  conversation={c}
+                  currentUser={user}
+                  online={onlineUsers}
+                />
               </div>
             ))}
           </div>
@@ -175,11 +191,27 @@ export default function Messenger() {
         </div>
         <div className="chatOnline">
           <div className="chatOnlineWrapper">
-            <ChatOnline
-              onlineUsers={onlineUsers}
-              currentId={user._id}
-              setCurrentChat={setCurrentChat}
-            />
+            <div className="profileCover">
+              <img
+                className="profileCoverImg"
+                src={
+                  friend?.coverPicture
+                    ? friend?.coverPicture
+                    : "https://media.istockphoto.com/vectors/pastel-abstract-shapes-background-vector-id1287148666?b=1&k=20&m=1287148666&s=612x612&w=0&h=4kZsYi1GlYlQlxtkdnd3pZtGajZe1MSq6tAkdGlE8RQ="
+                }
+                alt=""
+              />
+              <img
+                className="profileUserImg"
+                src={
+                  friend?.profilePicture
+                    ? friend.profilePicture
+                    : "person/noAvatar.png"
+                }
+                alt=""
+              />
+            </div>
+            <span className="profileName">{friend?.username}</span>
           </div>
         </div>
       </div>

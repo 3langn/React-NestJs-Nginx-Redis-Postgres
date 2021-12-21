@@ -86,7 +86,7 @@ export default function Share({ postHandler, props, closeDialog }) {
             className="shareProfileImg"
             src={
               user.profilePicture
-                ? PF + user.profilePicture
+                ? user.profilePicture
                 : PF + "person/noAvatar.png"
             }
             alt=""

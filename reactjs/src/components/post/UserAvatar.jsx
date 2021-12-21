@@ -8,9 +8,7 @@ export default function UserAvatar({ user }) {
       <img
         className="postProfileImg"
         src={
-          user.profilePicture
-            ? PF + user.profilePicture
-            : PF + "person/noAvatar.png"
+          user.profilePicture ? user.profilePicture : PF + "person/noAvatar.png"
         }
         alt=""
       />

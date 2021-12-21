@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { createClient } from 'redis';
+import { createClient, RedisClient } from 'redis';
 
 import { PostEntity } from 'src/post/post';
 import { gzip, unzipSync } from 'zlib';
@@ -10,6 +10,7 @@ export class RedisCacheService {
   constructor(@Inject('CacheService') private cacheManager) {}
 
   async compressAndSetToRedis(key, data) {
+    this.logger.debug('compress data');
     try {
       gzip(JSON.stringify(data), async (error, result) => {
         if (error) {
@@ -27,24 +28,24 @@ export class RedisCacheService {
     return JSON.parse(unzip.toString());
   }
 
-  async setOrGetCacheList(key, cb: () => Promise<PostEntity[]>) {
+  async setOrGetCacheList(key, cb: () => Promise<any>) {
     return new Promise((resolve, reject) => {
-      let data: PostEntity[] = [];
+      let data = [];
       this.cacheManager.lrange(key, 0, -1, async (err, reply) => {
         if (err) {
           return reject(err);
         }
-        if (reply.length !== 0) {
+        if (reply.length > 0) {
           data = reply.map((item) => {
-            const post = this.unzipFromRedis(item) as PostEntity;
-            post.likes = post.likes || [];
-            post.comments = post.comments || [];
-            return post;
+            const entity = this.unzipFromRedis(item);
+            return entity;
           });
           return resolve(data);
         }
         const resultDB = await cb();
-        this.cacheManager.expire('post', 3600);
+        this.cacheManager.expire(key, 3600);
+        this.logger.debug(JSON.stringify(resultDB));
+
         resultDB.forEach((element) => {
           this.compressAndSetToRedis(key, element);
         });
@@ -76,11 +77,15 @@ export class RedisCacheService {
 
   async setToRedis(key, cb): Promise<any> {
     const data = await cb();
+    this.logger.debug(' redis');
+
     return new Promise((resolve, reject) => {
       // nếu đã tồn tại key posts (Redis đã có dữ liệu) thì append vào list trong redis
       if (this.cacheManager.exists(key)) {
+        this.logger.debug('get data from redis');
         this.compressAndSetToRedis(key, data);
       }
+      this.logger.debug('set one data to redis');
       // set đơn để get bằng id
       this.setOneToRedis(key, data);
       resolve(data);

@@ -1,12 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserService } from 'src/user/users.service';
-import { Repository } from 'typeorm';
 import constants from '../../common/constants/constants';
-import { UserEntity } from '../../user/user';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

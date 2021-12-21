@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { RedisIoAdapter } from './adapters/redis.adapter';
 import { AppModule } from './app.module';
 import { NotFoundExceptionFilter } from './errors/catch.dto';
 
@@ -19,6 +20,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
   app.useGlobalFilters(new NotFoundExceptionFilter());
   app.useGlobalPipes(new ValidationPipe());
+  app.useWebSocketAdapter(new RedisIoAdapter(app));
 
   const configService = app.get(ConfigService);
   const port = configService.get('PORT');

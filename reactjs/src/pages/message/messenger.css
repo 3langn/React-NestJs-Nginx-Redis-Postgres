@@ -16,6 +16,9 @@
   flex: 5.5;
 }
 
+.profileName {
+}
+
 .chatBoxWrapper {
   display: flex;
   flex-direction: column;
@@ -60,6 +63,13 @@
 .chatMenuWrapper {
   padding: 10px;
   height: 100%;
+}
+
+.chatOnlineWrapper {
+  align-items: center;
+  justify-items: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .noConversationText {

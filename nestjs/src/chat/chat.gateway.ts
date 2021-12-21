@@ -1,7 +1,5 @@
-import { BadGatewayException, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { Logger } from '@nestjs/common';
 import {
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -9,6 +7,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { ConversationService } from 'src/conversation/conversation.service';
+import { RedisCacheService } from 'src/shared/redis-cache/redis-cache.service';
 import { TokenType } from '../common/constants/enum';
 import { TokenService } from '../token/token.service';
 
@@ -18,6 +17,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private tokenSerivce: TokenService,
     private readonly conversationService: ConversationService,
+    private readonly redisCacheService: RedisCacheService,
   ) {}
   @WebSocketServer()
   server;
@@ -37,9 +37,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           ...this.connectedUsers.slice(userPos + 1),
         ];
       }
-      this.logger.debug(user.username + ' disconnect');
-      client.leaveAll();
-      // // Sends the new list of connected users
       this.server.emit('users', this.connectedUsers);
     } catch (error) {
       this.logger.error(error);
@@ -54,10 +51,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       this.connectedUsers = [...this.connectedUsers, user.id];
-      console.log(user.username + ' connected');
       this.server.emit('users', this.connectedUsers);
     } catch (error) {
       this.logger.error(error);
+      throw error;
     }
   }
 
@@ -70,7 +67,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.content,
       data.senderId,
     );
-    this.logger.debug('Room: ' + data.conversationId);
     client.broadcast.to(data.conversationId).emit(event, message);
   }
 
@@ -80,13 +76,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
     client.join(data?.conversationId);
-
-    const messages = await this.conversationService.getMessages(
-      data.conversationId,
-    );
-    this.logger.debug('User join' + data?.conversationId);
-    // Send last messages to the connected user
-    // client.emit('message', messages);
   }
 
   @SubscribeMessage('leave')

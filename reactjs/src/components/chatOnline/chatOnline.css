@@ -8,6 +8,7 @@
 
 .chatOnlineImgContainer {
   position: relative;
+  margin-right: 10px;
 }
 
 .chatOnlineImg {

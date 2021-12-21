@@ -11,7 +11,7 @@ export default function PostTopLeft({ user, date }) {
           className="postProfileImg"
           src={
             user.profilePicture
-              ? PF + user.profilePicture
+              ? user.profilePicture
               : PF + "person/noAvatar.png"
           }
           alt=""

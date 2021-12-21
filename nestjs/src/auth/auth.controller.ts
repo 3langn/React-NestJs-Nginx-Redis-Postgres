@@ -95,9 +95,4 @@ export class AuthController {
     await this.authService.verifyEmail(user);
     res.redirect('http://localhost:3000');
   }
-
-  @Get('/test')
-  async hello(@Request() req) {
-    return await this.userService.getAllUsers();
-  }
 }
