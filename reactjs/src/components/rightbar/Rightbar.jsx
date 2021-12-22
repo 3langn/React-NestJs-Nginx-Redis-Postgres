@@ -6,12 +6,14 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { Add, Message, MessageRounded, Remove } from "@material-ui/icons";
+import { useHistory } from "react-router-dom";
 
 export default function Rightbar({ user }) {
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
   const [friends, setFriends] = useState([]);
   const { user: currentUser, dispatch } = useContext(AuthContext);
   const [followed, setFollowed] = useState(null);
+  const history = useHistory();
 
   useEffect(() => {
     setFollowed(currentUser.following.includes(user?.id));
@@ -51,6 +53,7 @@ export default function Rightbar({ user }) {
     } catch (err) {
       console.log(err);
     }
+    history.push("/messenger/" + user.id);
   };
 
   const HomeRightbar = () => {
@@ -77,18 +80,10 @@ export default function Rightbar({ user }) {
     return (
       <>
         {user.id !== currentUser.id && (
-          <Link
-            to={"/messenger/" + user.id}
-            className="rightbarFollowButton"
-            onClick={handleClickMessage}
-            style={{
-              textDecoration: "none",
-              width: "fit-content",
-            }}
-          >
+          <button className="rightbarFollowButton" onClick={handleClickMessage}>
             Message
             <MessageRounded style={{ marginLeft: 10 }} />
-          </Link>
+          </button>
         )}
         {user.id !== currentUser.id && (
           <button className="rightbarFollowButton" onClick={handleClick}>

@@ -73,7 +73,6 @@ export class ConversationService {
       ])
       .andWhere('conversations.id = :conversationId', { conversationId })
       .getMany();
-    this.logger.debug(JSON.stringify(messages));
     return messages;
   }
 

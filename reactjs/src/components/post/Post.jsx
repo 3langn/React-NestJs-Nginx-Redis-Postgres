@@ -155,9 +155,9 @@ export default function Post({ post, postHandler }) {
                   postHandler={postHandler}
                   closeDialog={handleDialogClose}
                   props={{
-                    post: post.image,
+                    file: post.image,
                     description: post.description,
-                    postId: post.id,
+                    id: post.id,
                   }}
                 />
               )}
@@ -165,7 +165,11 @@ export default function Post({ post, postHandler }) {
                 <Share
                   key={post.id}
                   postHandler={postHandler}
-                  props={{ file: null, desc: post?.desc, postId: post.id }}
+                  props={{
+                    file: null,
+                    description: post?.description,
+                    id: post.id,
+                  }}
                   closeDialog={handleDialogClose}
                 />
               )}

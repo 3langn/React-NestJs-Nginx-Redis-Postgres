@@ -8,11 +8,21 @@ import {
   Post,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 import { Response } from 'express';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 import { EmailService } from 'src/email/email.service';
-import { TokenType } from '../common/constants/enum';
+import { RolesEnum, TokenType } from '../common/constants/enum';
 import { TokenService } from '../token/token.service';
 import { UserLoginDto } from '../user/dto/user-login.dto';
 import { UserRegisterDto } from '../user/dto/user-register.dto';
@@ -21,6 +31,13 @@ import { Serialize } from '../user/users.interceptor';
 import { UserService } from '../user/users.service';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+class DeactivateRefreshTokenDto {
+  @ApiProperty()
+  @Expose()
+  email: string;
+}
 @ApiTags('Authentication')
 @Controller('/auth')
 export class AuthController {
@@ -66,8 +83,8 @@ export class AuthController {
   }
 
   @Post('/refresh-token')
-  async refreshToken(@Body() refreshToken: string) {
-    const tokens = await this.tokenService.refreshToken(refreshToken);
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    const tokens = await this.tokenService.refreshToken(refreshTokenDto);
     return {
       access_token: tokens.accessToken,
       refresh_token: tokens.refreshToken,
@@ -84,5 +101,29 @@ export class AuthController {
     );
     await this.authService.verifyEmail(user);
     res.redirect('http://localhost:3000');
+  }
+
+  // @ApiOkResponse({ description: 'Success' })
+  // @Get('/refresh-password')
+  // async refreshPassword(@Query('token') token: string, @Res() res: Response) {
+  //   const user = await this.tokenService.verifyToken(
+  //     token,
+  //     TokenType.RefreshPasswordToken,
+  //   );
+  //   const tokens = await this.tokenService.generateAuthToken(user);
+  //   return {
+  //     user,
+  //     access_token: tokens.accessToken,
+  //     refresh_token: tokens.refreshToken,
+  //   };
+  // }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(RolesEnum.ADMIN)
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Success', type: DeactivateRefreshTokenDto })
+  @Post('/deactivate-refresh-token')
+  async deactivateRefreshToken(@Body() dto: DeactivateRefreshTokenDto) {
+    return await this.tokenService.deactivateRefreshToken(dto.email);
   }
 }

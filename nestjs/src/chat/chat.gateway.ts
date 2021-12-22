@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { BadGatewayException, Logger } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -40,6 +40,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.emit('users', this.connectedUsers);
     } catch (error) {
       this.logger.error(error);
+      throw new BadGatewayException(error);
     }
   }
 
@@ -51,6 +52,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
       this.connectedUsers = [...this.connectedUsers, user.id];
+      this.logger.debug(this.connectedUsers);
       this.server.emit('users', this.connectedUsers);
     } catch (error) {
       this.logger.error(error);
@@ -80,6 +82,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('leave')
   onRoomLeave(client, data: any): void {
-    client.leave(data[0]);
+    client.leave(data?.conversationId);
   }
 }

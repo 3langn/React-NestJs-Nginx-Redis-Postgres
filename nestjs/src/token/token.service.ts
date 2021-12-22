@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RefreshTokenDto } from 'src/auth/dto/refresh-token.dto';
 import { Repository } from 'typeorm';
 import { TokenPayloadDto } from '../auth/dto/token-payload.dto';
 import constants from '../common/constants/constants';
@@ -41,7 +42,7 @@ export class TokenService {
 
   async saveToken(token: string, user: UserEntity, tokenType: TokenType) {
     let tokenDoc = await this.tokenRepo.findOne({
-      where: { user },
+      where: { user, type: tokenType },
     });
     if (tokenDoc) {
       tokenDoc.token = token;
@@ -79,7 +80,6 @@ export class TokenService {
             user: payload.sub,
           },
         });
-
         if (!tokenDoc) {
           throw new Error('Token does not exist');
         }
@@ -95,8 +95,11 @@ export class TokenService {
     }
   }
 
-  async refreshToken(token: string) {
-    const tokenPayload = await this.verifyToken(token, TokenType.RefreshToken);
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    const tokenPayload = await this.verifyToken(
+      refreshTokenDto.refreshToken,
+      TokenType.RefreshToken,
+    );
     return this.generateAuthToken(tokenPayload);
   }
 
@@ -123,5 +126,17 @@ export class TokenService {
       user,
       TokenType.RefreshPasswordToken,
     );
+  }
+  // deactivate refresh token
+  async deactivateRefreshToken(email: string) {
+    const tokenDoc = await this.tokenRepo.findOne({
+      relations: ['user'],
+      where: { user: { email } },
+    });
+    if (!tokenDoc) {
+      throw new NotFoundException('Token does not exist');
+    }
+    tokenDoc.active = false;
+    return await this.tokenRepo.save(tokenDoc);
   }
 }

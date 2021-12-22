@@ -10,7 +10,6 @@ export class RedisCacheService {
   constructor(@Inject('CacheService') private cacheManager) {}
 
   async compressAndSetToRedis(key, data) {
-    this.logger.debug('compress data');
     try {
       gzip(JSON.stringify(data), async (error, result) => {
         if (error) {
@@ -24,31 +23,56 @@ export class RedisCacheService {
   }
 
   unzipFromRedis(data) {
-    const unzip = unzipSync(data);
-    return JSON.parse(unzip.toString());
+    const unzip = data.map((buffer) => {
+      const unzip = unzipSync(buffer);
+      return JSON.parse(unzip.toString());
+    });
+    return unzip;
   }
 
   async setOrGetCacheList(key, cb: () => Promise<any>) {
     return new Promise((resolve, reject) => {
-      let data = [];
       this.cacheManager.lrange(key, 0, -1, async (err, reply) => {
         if (err) {
           return reject(err);
         }
         if (reply.length > 0) {
-          data = reply.map((item) => {
-            const entity = this.unzipFromRedis(item);
-            return entity;
-          });
-          return resolve(data);
+          const entity = this.unzipFromRedis(reply);
+
+          return resolve(entity);
         }
         const resultDB = await cb();
         this.cacheManager.expire(key, 3600);
-        this.logger.debug(JSON.stringify(resultDB));
 
         resultDB.forEach((element) => {
           this.compressAndSetToRedis(key, element);
         });
+        resolve(resultDB);
+      });
+    });
+  }
+
+  async setOrGetCacheListNotZip(key, cb: () => Promise<any>) {
+    return new Promise((resolve, reject) => {
+      this.cacheManager.lrange(key, 0, -1, async (err, reply) => {
+        if (err) {
+          return reject(err);
+        }
+        if (reply.length > 0) {
+          this.logger.debug(reply);
+          return resolve(reply);
+        }
+        const resultDB = await cb();
+        this.cacheManager.expire(key, 3600);
+
+        this.cacheManager.rpush(
+          key,
+          resultDB.map((i) => {
+            JSON.stringify(i);
+          }),
+        );
+        // resultDB.forEach((element) => {
+        // });
         resolve(resultDB);
       });
     });
@@ -77,15 +101,12 @@ export class RedisCacheService {
 
   async setToRedis(key, cb): Promise<any> {
     const data = await cb();
-    this.logger.debug(' redis');
 
     return new Promise((resolve, reject) => {
       // nếu đã tồn tại key posts (Redis đã có dữ liệu) thì append vào list trong redis
       if (this.cacheManager.exists(key)) {
-        this.logger.debug('get data from redis');
         this.compressAndSetToRedis(key, data);
       }
-      this.logger.debug('set one data to redis');
       // set đơn để get bằng id
       this.setOneToRedis(key, data);
       resolve(data);

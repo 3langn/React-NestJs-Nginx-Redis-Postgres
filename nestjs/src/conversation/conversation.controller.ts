@@ -14,6 +14,10 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RedisCacheService } from 'src/shared/redis-cache/redis-cache.service';
 import { UserService } from 'src/user/users.service';
 import { ConversationService } from './conversation.service';
+import {
+  CreateConversationDto,
+  CreateMessageDto,
+} from './dto/create-conversation.dto';
 
 @ApiTags('Conversation')
 @UseGuards(JwtAuthGuard)
@@ -36,10 +40,13 @@ export class ConversationController {
   }
 
   @Post('/create')
-  async createConversation(@Body() body, @Request() req) {
+  async createConversation(
+    @Body() createConversationDto: CreateConversationDto,
+    @Request() req,
+  ) {
     const friend = await this.userService.checkIfUserHasConversation(
       req.user,
-      body.userId,
+      createConversationDto.userId,
     );
     if (!friend) {
       throw new BadRequestException('Conversation already exist');
@@ -49,7 +56,23 @@ export class ConversationController {
 
   @Get('/:conversationId')
   async getMessages(@Param('conversationId') conversationId: string) {
+
     const messages = await this.redisCacheService.setOrGetCacheList(
+      'message' + conversationId,
+      async () => {
+        const messages = await this.conversationService.getMessages(
+          conversationId,
+        );
+        return messages;
+      },
+    );
+    return messages;
+  }
+
+  @Get('/:conversationId/not-zip')
+  async getMessagesNotZip(@Param('conversationId') conversationId: string) {
+
+    const messages = await this.redisCacheService.setOrGetCacheListNotZip(
       'message' + conversationId,
       async () => {
         const messages = await this.conversationService.getMessages(
@@ -64,16 +87,19 @@ export class ConversationController {
   @Post('/:conversationId')
   async createMessage(
     @Param('conversationId') conversationId: string,
-    @Body() message: { content: string },
+    @Body() createMessageDto: CreateMessageDto,
     @Request() req,
   ) {
-    this.logger.debug(message);
-
-    const messagePayload = await this.conversationService.createMessage(
-      'conversationId',
-      message.content,
-      req.user.id,
-    );
-    return messagePayload;
+    let messagePayload = [];
+    for (let index = 0; index < 100; index++) {
+      messagePayload.push(
+        this.conversationService.createMessage(
+          conversationId,
+          createMessageDto.content + ' ' + index,
+          req.user.id,
+        ),
+      );
+    }
+    return await Promise.all(messagePayload);
   }
 }

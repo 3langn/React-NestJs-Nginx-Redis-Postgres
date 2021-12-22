@@ -98,7 +98,9 @@ export class PostService {
     return this.postEntity.save(post);
   }
 
-  async updatePost(post: PostDto) {
+  async updatePost(post: PostEntity, postDto: PostDto) {
+    post.image = postDto.image;
+    post.description = postDto.description;
     return this.postEntity.save(post);
   }
 

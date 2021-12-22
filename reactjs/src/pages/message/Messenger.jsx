@@ -32,14 +32,22 @@ export default function Messenger() {
       transports: ["websocket"],
     });
 
-    console.log("CURRCHAT: " + currentConversation?.id);
     socket.current.on("message", (data) => {
-      console.log("Socket: " + JSON.stringify(data));
       setArrivalMessage({
         sender: data.sender,
         content: data.content,
         createdAt: Date.now(),
       });
+    });
+
+    socket.current.on("users", (users) => {
+      const onlineUsers = user.following.filter((f) => {
+        return users.some((u) => {
+          return u === f;
+        });
+      });
+      console.log("Online Users: " + JSON.stringify(onlineUsers));
+      setOnlineUsers(onlineUsers);
     });
   }, []);
 
@@ -50,18 +58,6 @@ export default function Messenger() {
       ) &&
       setMessages((prev) => [...prev, arrivalMessage]);
   }, [arrivalMessage]);
-
-  useEffect(() => {
-    socket.current.on("users", (users) => {
-      const onlineUsers = user.following.filter((f) => {
-        return users.some((u) => {
-          return u === f;
-        });
-      });
-      console.log("Online Users: " + JSON.stringify(onlineUsers));
-      setOnlineUsers(onlineUsers);
-    });
-  }, [user]);
 
   useEffect(() => {
     const getConversations = async () => {

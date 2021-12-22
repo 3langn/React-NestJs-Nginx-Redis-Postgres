@@ -21,9 +21,11 @@ export default function Share({ postHandler, props, closeDialog }) {
   const [id, setId] = useState("file");
   useEffect(() => {
     if (props) {
+      console.log("Have file");
+      console.log(props.file);
       setId(props.id);
       setFile(props.file);
-      setDesc(props.desc);
+      setDesc(props.description);
       setIsEmpty(false);
     }
   }, [props]);
@@ -33,8 +35,9 @@ export default function Share({ postHandler, props, closeDialog }) {
 
     e.preventDefault();
     const newPost = {
-      userId: user._id,
+      userId: user.id,
       description: desc,
+      postId: id,
     };
     console.log(file);
     if (file && typeof file === "object") {
@@ -50,7 +53,7 @@ export default function Share({ postHandler, props, closeDialog }) {
         console.log(err);
       }
     } else {
-      newPost.image = file ? file.split(PF)[1] : "";
+      newPost.image = file ? file : "";
     }
 
     if (!props) {
@@ -60,7 +63,7 @@ export default function Share({ postHandler, props, closeDialog }) {
     } else {
       // edit
       try {
-        await axios.put("/posts/" + props.postId, newPost);
+        await axios.put("/posts/" + props.id, newPost);
       } catch (error) {}
       closeDialog();
     }

@@ -105,20 +105,27 @@ export class UserService {
   }
 
   async getWholeUserEntity(user: UserEntity): Promise<any> {
-    const following = await this.userFollowerRepo.find({
-      where: { followers: user },
-      relations: ['following'],
-    });
-    const follower = await this.userFollowerRepo.find({
-      where: { following: user },
-      relations: ['following'],
-    });
-    const payload = {
-      ...user,
-      following: following.map((f: UserFollowerEntity) => f.following),
-      followers: follower.map((f: UserFollowerEntity) => f.followers),
-    };
-    return payload;
+    try {
+      const following = await this.userFollowerRepo.find({
+        where: { followers: user },
+        relations: ['followers'],
+      });
+      const followers = await this.userFollowerRepo.find({
+        where: { following: user },
+        relations: ['following'],
+      });
+      const payload = {
+        ...user,
+        following: following.map((f: UserFollowerEntity) => {
+          if (!f.following) return;
+          return f.following;
+        }),
+        followers: followers.map((f: UserFollowerEntity) => f.followers),
+      };
+      return payload;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
   }
 
   getAllUsers(): Promise<UserEntity[]> {
@@ -142,31 +149,35 @@ export class UserService {
 
   // follow user
   async followUser(user: any, friendId: string): Promise<UserEntity> {
-    const friend = await this.repo.findOne({
-      where: { id: friendId },
-    });
-    if (!friend) {
-      throw new NotFoundException('User not found');
-    }
-    if (user.following.length > 0) {
-      const followed = user.following.some((friend: UserFollowerEntity) => {
-        return friend.id === friendId;
+    try {
+      const friend = await this.repo.findOne({
+        where: { id: friendId },
       });
-      if (followed) {
-        throw new NotFoundException('User already following');
+      if (!friend) {
+        throw new NotFoundException('User not found');
       }
+      if (user.following.length > 0) {
+        const followed = user.following.some((friend: UserFollowerEntity) => {
+          return friend?.id === friendId;
+        });
+        if (followed) {
+          throw new NotFoundException('User already following');
+        }
+      }
+      const userFollower = this.userFollowerRepo.create({
+        followers: user,
+        following: friend,
+      });
+
+      const userFollowerEntity = await this.userFollowerRepo.save(userFollower);
+
+      user.following.push(userFollowerEntity);
+
+      await this.repo.save(user);
+      return friend;
+    } catch (error) {
+      throw new BadRequestException(error);
     }
-    const userFollower = this.userFollowerRepo.create({
-      followers: user,
-      following: friend,
-    });
-
-    const userFollowerEntity = await this.userFollowerRepo.save(userFollower);
-
-    user.following.push(userFollowerEntity);
-
-    await this.repo.save(user);
-    return friend;
   }
 
   // unfollow user
@@ -178,7 +189,7 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     user.following = user.following.filter(
-      (friend: UserFollowerEntity) => friend.id !== friendId,
+      (friend: UserFollowerEntity) => friend?.id !== friendId,
     );
     this.repo.save(user);
   }

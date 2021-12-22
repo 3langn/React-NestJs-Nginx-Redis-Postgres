@@ -79,27 +79,27 @@ export class PostController {
 
   @Put('/:postId')
   async updatePost(
-    @Param() postId: string,
+    @Param('postId') postId: string,
     @Body() postDto: PostDto,
     @Request() req,
   ): Promise<PostEntity> {
-    await this.postService.checkUserOwnsPost(postId, req.user);
-    const postPayload = await this.postService.updatePost(postDto);
+    const post = await this.postService.checkUserOwnsPost(postId, req.user);
+    const postPayload = await this.postService.updatePost(post, postDto);
     return postPayload;
   }
 
-  @Post('/seed')
-  async seedPost(@Request() req) {
-    let postPayload: Promise<PostEntity>[] = [];
-    for (let index = 0; index < 1000; index++) {
-      const post: PostDto = {
-        description: `Post ${index}`,
-        image: internet.email(),
-      };
-      postPayload.push(this.postService.createPost(post, req.user));
-    }
-    return await Promise.all(postPayload);
-  }
+  // @Post('/seed')
+  // async seedPost(@Request() req) {
+  //   let postPayload: Promise<PostEntity>[] = [];
+  //   for (let index = 0; index < 1000; index++) {
+  //     const post: PostDto = {
+  //       description: `Post ${index}`,
+  //       image: internet.email(),
+  //     };
+  //     postPayload.push(this.postService.createPost(post, req.user));
+  //   }
+  //   return await Promise.all(postPayload);
+  // }
 
   @Delete('/delete-post')
   async deleteAllPost() {
