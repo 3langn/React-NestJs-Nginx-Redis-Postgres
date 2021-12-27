@@ -9,3 +9,8 @@ export enum RolesEnum {
   ADMIN = 'admin',
   USER = 'user',
 }
+export enum PostFields {
+  description = 'description',
+  likes = 'likes',
+  comments = 'comments',
+}

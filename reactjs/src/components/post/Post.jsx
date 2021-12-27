@@ -33,7 +33,7 @@ const comments = ["comment", "Hello Milona"];
 export default function Post({ post, postHandler }) {
   const PF = process.env.REACT_APP_PUBLIC_FOLDER;
 
-  const [like, setLike] = useState(post.likes.length);
+  const [like, setLike] = useState(post.likes);
   const [isLiked, setIsLiked] = useState(false);
 
   const [user, setUser] = useState({});
@@ -85,8 +85,14 @@ export default function Post({ post, postHandler }) {
     setAnchorEl(null);
   };
   useEffect(() => {
-    console.log(post.likes);
-    setIsLiked(post.likes.some((l) => l.id));
+    const fetchLike = async () => {
+      return await (
+        await axios.get(`/posts/${post.id}/isLiked`)
+      ).data;
+    };
+    const liked = fetchLike();
+    console.log("Like:" + like);
+    setIsLiked(liked);
   }, [currentUser.id, post.likes]);
 
   useEffect(() => {

@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, In, Repository } from 'typeorm';
 import { UserEntity } from '../user/user';
@@ -12,6 +7,7 @@ import { PostEntity } from './post';
 import { LikeEntity } from 'src/entity/like';
 import { CommentEntity } from 'src/entity/comment';
 import { RedisCacheService } from 'src/shared/redis-cache/redis-cache.service';
+import { PostFields } from 'src/common/constants/enum';
 
 @Injectable()
 export class PostService {
@@ -89,8 +85,11 @@ export class PostService {
       const index = post.likes.indexOf(like);
       post.likes.splice(index, 1);
       await this.likeEntity.remove(like);
+      this.redisCache.updatePost(PostFields.likes, post, -1);
     } else {
       const like = this.likeEntity.create({ post, user });
+      this.redisCache.updatePost(PostFields.likes, post, 1);
+
       await this.likeEntity.save(like);
       post.likes.push(like);
     }
@@ -119,22 +118,37 @@ export class PostService {
 
   async getUserTimeline(user: UserEntity): Promise<any> {
     try {
-      const post = await this.postEntity
-        .createQueryBuilder('posts')
-        .leftJoinAndSelect('posts.user', 'user')
-        .select(['posts', 'user.id'])
-        .leftJoinAndSelect('posts.comments', 'comments')
-        .leftJoinAndSelect('posts.likes', 'likes')
-        .getMany();
-      return post;
-      // return await this.redisCache.setOrGetCacheList('post', async () => {
-      // });
+      return await this.redisCache.getUserPosts(user.id, async () => {
+        const post = await this.postEntity
+          .createQueryBuilder('posts')
+          .leftJoinAndSelect('posts.user', 'user')
+          .select(['posts', 'user.id'])
+          .leftJoinAndSelect('posts.comments', 'comments')
+          .loadRelationCountAndMap('posts.likes', 'posts.likes')
+          .getMany();
+        return post;
+      });
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException('Can not get post');
     }
   }
 
+  //check if user liked post
+  async checkUserLikedPost(postId: string, userId: string) {
+    try {
+      console.log(postId, userId);
+
+      const like = await this.likeEntity.findOne({
+        where: { post: { id: postId }, user: { id: userId } },
+        relations: ['post', 'user'],
+      });
+      return like ? true : false;
+    } catch (error) {
+      this.logger.error(error);
+      throw new BadRequestException('Can not check user liked post');
+    }
+  }
   // get user post
   async getUserPosts(userId: string) {
     try {

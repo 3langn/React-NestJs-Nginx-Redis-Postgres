@@ -32,7 +32,7 @@ import { ConversationModule } from './conversation/conversation.module';
     EmailModule,
     ConversationModule,
   ],
-  controllers: [AppController, ConversationController],
-  providers: [AppService, ChatGateway, ConversationService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

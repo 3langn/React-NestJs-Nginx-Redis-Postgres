@@ -1,67 +1,106 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { createClient, RedisClient } from 'redis';
+import { PostFields } from 'src/common/constants/enum';
 
 import { PostEntity } from 'src/post/post';
 import { gzip, unzipSync } from 'zlib';
-enum PostFields {
-  content = 'content',
-  likes = 'likes',
-  comments = 'comments',
-}
 
 @Injectable()
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
   constructor(@Inject('CacheService') private cacheManager: RedisClient) {}
 
-  async setPosts(posts: PostEntity[]) {
-    posts.forEach(async (post) => {
-      this.setPost(post);
-    });
-  }
-
-  async setPost(post: PostEntity) {
+  async setPost(key: string, post: PostEntity) {
+    // set mot post
     this.cacheManager.hset(
-      'user_posts:' + post.user.id,
-      'content' + post.id,
+      key, // 'post:' + post.id
+      'id',
+      post.id.toString(),
+      'description',
       post.description,
-      'likes' + post.id,
-      post.likes.length.toString(),
-      'comments' + post.id,
+      'likes',
+      post.likes.toString(),
+      'comments',
       post.comments.toString(),
+      'create_at',
+      post.created_at.toString(),
+      'user',
+      JSON.stringify(post.user),
+      'image',
+      post.image,
     );
   }
-  async updatePost(field: PostFields, post: PostEntity) {
+
+  /**
+   *
+   * @param field field của entity
+   * @param post
+   * @param count neu user da~ like post thi count = -1 nguoc lai count = 1
+   */
+  async updatePost(field: PostFields, post: PostEntity, count?: number) {
     switch (field) {
-      case PostFields.content:
-        this.cacheManager.hset(
-          'user_posts:' + post.user.id,
-          'content:' + post.id,
-          post.description,
-        );
+      case PostFields.description:
+        this.cacheManager.hset('post:' + post.id, 'description', post.description);
         break;
-      case PostFields.likes:
-        this.cacheManager.HINCRBY(
-          'user_posts:' + post.user.id,
-          'likes:' + post.id,
-          1,
-        );
+      case PostFields.likes || PostFields.comments:
+        const postField = field === PostFields.likes ? PostFields.likes : PostFields.comments;
+        this.cacheManager.hincrby('post:' + post.id, postField, count);
         break;
     }
   }
 
-  async getUserPosts(userId) {
+  async getUserPosts(userId: string, cb: () => Promise<PostEntity[]>) {
     return new Promise((resolve, reject) => {
-      this.cacheManager.hgetall('user_posts:' + userId, async (err, reply) => {
+      this.cacheManager.lrange('user_posts:' + userId, 0, -1, async (err, postsId) => {
         if (err) {
-          reject(err);
+          return reject(err);
         }
-        if (reply) {
-          resolve(reply);
+        if (postsId.length > 0) {
+          const data = await Promise.all(
+            postsId.map(async (element) => {
+              const post = await this.getPostFromRedis(element);
+              return post;
+            }),
+          );
+          resolve(data);
+        } else {
+          // lay cac post cua user
+          const posts = await cb();
+
+          /** day cac id cua post vao redis su dung key user_posts:userId
+           * de lay ra nhung post cua user */
+          posts.forEach((p) => {
+            this.cacheManager.rpush('user_posts:' + userId, p.id.toString());
+            this.setPost('post:' + p.id, p);
+          });
+          resolve(posts);
         }
-        return null;
       });
     });
+  }
+
+  async getPostFromRedis(key) {
+    try {
+      return new Promise((resolve, reject) => {
+        this.cacheManager.hgetall('post:' + key, async (err, reply) => {
+          if (err) {
+            return reject(err);
+          }
+          const { id, description, likes, comments, image, create_at, user } = reply;
+          resolve({
+            id,
+            description,
+            likes: parseInt(likes),
+            create_at: Date.parse(create_at),
+            comments: parseInt(comments),
+            user: JSON.parse(user),
+            image,
+          });
+        });
+      });
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 
   async compressAndSetToRedis(key, data) {
@@ -114,7 +153,6 @@ export class RedisCacheService {
           return reject(err);
         }
         if (reply.length > 0) {
-          this.logger.debug(reply);
           return resolve(reply);
         }
         const resultDB = await cb();

@@ -10,7 +10,6 @@ import * as Redis from 'redis';
         const redisClient = Redis.createClient({
           host: configService.get('redis.host'),
           port: configService.get('redis.port'),
-          return_buffers: true,
         });
         return redisClient;
       },

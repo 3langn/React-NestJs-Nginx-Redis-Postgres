@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Req,
-  Request,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CommentEntity } from 'src/entity/comment';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -32,10 +21,7 @@ export class PostController {
   }
 
   @Delete('/:postId')
-  async deletePost(
-    @Param('postId') postId: string,
-    @Request() req,
-  ): Promise<void> {
+  async deletePost(@Param('postId') postId: string, @Request() req): Promise<void> {
     await this.postService.deletePost(postId, req.user);
   }
 
@@ -52,37 +38,31 @@ export class PostController {
   }
 
   @Put('/:postId/like')
-  updatePostLikes(
-    @Param('postId') postId: string,
-    @Request() req,
-  ): Promise<PostEntity> {
+  updatePostLikes(@Param('postId') postId: string, @Request() req): Promise<PostEntity> {
     return this.postService.updatePostLikes(postId, req.user);
   }
-  
+
   @Get('/:postId/comments')
-  async getPostComments(
-    @Param('postId') postId: string,
-  ): Promise<CommentEntity[]> {
+  async getPostComments(@Param('postId') postId: string): Promise<CommentEntity[]> {
     const comments = await this.postService.getPostComments(postId);
     return comments;
   }
 
+  // check if user liked post
+  @Get('/:postId/isLiked')
+  async checkIfUserLikedPost(@Param('postId') postId: string, @Request() req): Promise<boolean> {
+    const isLiked = await this.postService.checkUserLikedPost(postId, req.user.id);
+    return isLiked;
+  }
+
   // comment
   @Post('/:postId/comments')
-  async createComment(
-    @Param('postId') postId: string,
-    @Body() body: any,
-    @Request() req,
-  ): Promise<void> {
+  async createComment(@Param('postId') postId: string, @Body() body: any, @Request() req): Promise<void> {
     await this.postService.createComment(postId, req.user, body.comment);
   }
 
   @Put('/:postId')
-  async updatePost(
-    @Param('postId') postId: string,
-    @Body() postDto: PostDto,
-    @Request() req,
-  ): Promise<PostEntity> {
+  async updatePost(@Param('postId') postId: string, @Body() postDto: PostDto, @Request() req): Promise<PostEntity> {
     const post = await this.postService.checkUserOwnsPost(postId, req.user);
     const postPayload = await this.postService.updatePost(post, postDto);
     return postPayload;
