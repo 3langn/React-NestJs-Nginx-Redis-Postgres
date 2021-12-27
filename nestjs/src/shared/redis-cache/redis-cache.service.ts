@@ -3,11 +3,66 @@ import { createClient, RedisClient } from 'redis';
 
 import { PostEntity } from 'src/post/post';
 import { gzip, unzipSync } from 'zlib';
+enum PostFields {
+  content = 'content',
+  likes = 'likes',
+  comments = 'comments',
+}
 
 @Injectable()
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
-  constructor(@Inject('CacheService') private cacheManager) {}
+  constructor(@Inject('CacheService') private cacheManager: RedisClient) {}
+
+  async setPosts(posts: PostEntity[]) {
+    posts.forEach(async (post) => {
+      this.setPost(post);
+    });
+  }
+
+  async setPost(post: PostEntity) {
+    this.cacheManager.hset(
+      'user_posts:' + post.user.id,
+      'content' + post.id,
+      post.description,
+      'likes' + post.id,
+      post.likes.length.toString(),
+      'comments' + post.id,
+      post.comments.toString(),
+    );
+  }
+  async updatePost(field: PostFields, post: PostEntity) {
+    switch (field) {
+      case PostFields.content:
+        this.cacheManager.hset(
+          'user_posts:' + post.user.id,
+          'content:' + post.id,
+          post.description,
+        );
+        break;
+      case PostFields.likes:
+        this.cacheManager.HINCRBY(
+          'user_posts:' + post.user.id,
+          'likes:' + post.id,
+          1,
+        );
+        break;
+    }
+  }
+
+  async getUserPosts(userId) {
+    return new Promise((resolve, reject) => {
+      this.cacheManager.hgetall('user_posts:' + userId, async (err, reply) => {
+        if (err) {
+          reject(err);
+        }
+        if (reply) {
+          resolve(reply);
+        }
+        return null;
+      });
+    });
+  }
 
   async compressAndSetToRedis(key, data) {
     try {
@@ -15,7 +70,7 @@ export class RedisCacheService {
         if (error) {
           throw error;
         }
-        this.cacheManager.rpush(key, result);
+        // this.cacheManager.rpush(key, result);
       });
     } catch (error) {
       throw error;

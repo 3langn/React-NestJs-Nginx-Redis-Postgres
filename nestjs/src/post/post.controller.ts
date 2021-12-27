@@ -58,7 +58,7 @@ export class PostController {
   ): Promise<PostEntity> {
     return this.postService.updatePostLikes(postId, req.user);
   }
-  // get post comments
+  
   @Get('/:postId/comments')
   async getPostComments(
     @Param('postId') postId: string,
