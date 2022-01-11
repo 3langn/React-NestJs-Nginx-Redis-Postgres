@@ -2,7 +2,7 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { FindOneOptions, Repository } from 'typeorm';
-import { RolesEnum } from '../common/constants/enum';
+import { RolesEnum } from '../shared/constants/enum';
 import { UserRegisterDto } from './dto/user-register.dto';
 import { UserEntity } from './user';
 import { UserService } from './users.service';
@@ -29,9 +29,7 @@ describe('UsersService', () => {
     }),
     create: jest.fn().mockImplementation((dto) => dto),
     findOne: jest.fn().mockImplementation((args) => {
-      const user = fakeUserTable.find(
-        (user) => user.email === args.where.email,
-      ) as UserEntity;
+      const user = fakeUserTable.find((user) => user.email === args.where.email) as UserEntity;
       return Promise.resolve(user);
     }),
   };

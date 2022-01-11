@@ -1,7 +1,7 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '@sendgrid/mail';
-import constants from '../common/constants/constants';
+import constants from '../shared/constants/constants';
 
 export class SendMailVerifyDto {
   to: string;
@@ -13,10 +13,7 @@ export class EmailService {
   verificationEmailUrl: string;
   resetPasswordUrl: string;
   hostUrl: string;
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly mailService: MailService,
-  ) {
+  constructor(private readonly configService: ConfigService, private readonly mailService: MailService) {
     mailService.setApiKey(this.configService.get(constants.SENDGRID_API_KEY));
     this.hostUrl = this.configService.get('host.url');
     this.verificationEmailUrl = `${this.hostUrl}/auth/verify-email?token=`;
@@ -179,8 +176,7 @@ export class EmailService {
                                         <table border="0" cellspacing="0" cellpadding="0">
                                             <tr>
                                                 <td align="center" style="border-radius: 3px;" bgcolor="#FFA73B"><a href="${
-                                                  this.verificationEmailUrl +
-                                                  sendMailVerifyDto.token
+                                                  this.verificationEmailUrl + sendMailVerifyDto.token
                                                 }" target="_blank" style="font-size: 20px; font-family: Helvetica, Arial, sans-serif; color: #ffffff; text-decoration: none; color: #ffffff; text-decoration: none; padding: 15px 25px; border-radius: 2px; border: 1px solid #FFA73B; display: inline-block;">Confirm Account</a></td>
                                             </tr>
                                         </table>

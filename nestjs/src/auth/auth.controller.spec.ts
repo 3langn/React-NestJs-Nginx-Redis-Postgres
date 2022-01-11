@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RolesEnum } from '../common/constants/enum';
+import { RolesEnum } from '../shared/constants/enum';
 import { TokenService } from '../token/token.service';
 import { UserLoginDto } from '../user/dto/user-login.dto';
 import { UserRegisterDto } from '../user/dto/user-register.dto';
@@ -23,9 +23,7 @@ describe('AuthController', () => {
     findByEmail: jest.fn().mockImplementation((email) => {
       return true;
     }),
-    isMatchPassword: jest
-      .fn()
-      .mockImplementation((password, hashPassword) => true),
+    isMatchPassword: jest.fn().mockImplementation((password, hashPassword) => true),
   };
   const mockTokenService: Partial<TokenService> = {
     generateAuthToken: jest.fn().mockImplementation((userId) => {

@@ -9,7 +9,7 @@ import {
   ManyToMany,
 } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { RolesEnum } from '../common/constants/enum';
+import { RolesEnum } from '../shared/constants/enum';
 import { Tokens } from '../token/token.entity';
 import { classToPlain, Exclude } from 'class-transformer';
 import { PostEntity } from '../post/post';

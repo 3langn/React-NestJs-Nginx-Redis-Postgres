@@ -7,7 +7,7 @@ import { PostEntity } from './post';
 import { LikeEntity } from 'src/entity/like';
 import { CommentEntity } from 'src/entity/comment';
 import { RedisCacheService } from 'src/shared/redis-cache/redis-cache.service';
-import { PostFields } from 'src/common/constants/enum';
+import { PostFields } from 'src/shared/constants/enum';
 
 @Injectable()
 export class PostService {
@@ -137,8 +137,6 @@ export class PostService {
   //check if user liked post
   async checkUserLikedPost(postId: string, userId: string) {
     try {
-      console.log(postId, userId);
-
       const like = await this.likeEntity.findOne({
         where: { post: { id: postId }, user: { id: userId } },
         relations: ['post', 'user'],

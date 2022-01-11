@@ -26,7 +26,7 @@ export default function Messenger() {
   const scrollRef = useRef();
   const history = useHistory();
   useEffect(() => {
-    socket.current = io("ws://localhost:8080", {
+    socket.current = io("localhost:8080", {
       path: "/api/socket.io",
       query: `token=${token.access_token}`,
       transports: ["websocket"],
