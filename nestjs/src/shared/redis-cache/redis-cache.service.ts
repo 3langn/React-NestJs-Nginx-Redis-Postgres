@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { createClient, RedisClient } from 'redis';
-import { PostFields } from 'src/common/constants/enum';
+import { PostFields } from 'src/shared/constants/enum';
 
 import { PostEntity } from 'src/post/post';
 import { gzip, unzipSync } from 'zlib';
@@ -82,6 +82,7 @@ export class RedisCacheService {
   async getPostFromRedis(key) {
     try {
       return new Promise((resolve, reject) => {
+        // lay post tu redis bang id
         this.cacheManager.hgetall('post:' + key, async (err, reply) => {
           if (err) {
             return reject(err);

@@ -1,17 +1,12 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshTokenDto } from 'src/auth/dto/refresh-token.dto';
 import { Repository } from 'typeorm';
 import { TokenPayloadDto } from '../auth/dto/token-payload.dto';
-import constants from '../common/constants/constants';
-import { TokenType } from '../common/constants/enum';
+import constants from '../shared/constants/constants';
+import { TokenType } from '../shared/constants/enum';
 import { UserEntity } from '../user/user';
 import { Tokens } from './token.entity';
 @Injectable()
@@ -25,14 +20,8 @@ export class TokenService {
   ) {}
 
   async generateAuthToken(user: UserEntity): Promise<TokenPayloadDto> {
-    const accessToken = this.generateToken(
-      user,
-      this.configService.get(constants.JWT_ACCESS_EXPIRATION),
-    );
-    const refreshToken = this.generateToken(
-      user,
-      this.configService.get(constants.JWT_REFRESH_EXPIRATION),
-    );
+    const accessToken = this.generateToken(user, this.configService.get(constants.JWT_ACCESS_EXPIRATION));
+    const refreshToken = this.generateToken(user, this.configService.get(constants.JWT_REFRESH_EXPIRATION));
     await this.saveToken(refreshToken, user, TokenType.RefreshToken);
     return {
       accessToken,
@@ -96,18 +85,12 @@ export class TokenService {
   }
 
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
-    const tokenPayload = await this.verifyToken(
-      refreshTokenDto.refreshToken,
-      TokenType.RefreshToken,
-    );
+    const tokenPayload = await this.verifyToken(refreshTokenDto.refreshToken, TokenType.RefreshToken);
     return this.generateAuthToken(tokenPayload);
   }
 
   async generateVerifyEmailToken(user: UserEntity) {
-    const verifyEmailToken = this.generateToken(
-      user,
-      this.configService.get(constants.JWT_VERIFY_EMAIL_EXPIRATION),
-    );
+    const verifyEmailToken = this.generateToken(user, this.configService.get(constants.JWT_VERIFY_EMAIL_EXPIRATION));
     await this.saveToken(verifyEmailToken, user, TokenType.VerifyEmailToken);
     return verifyEmailToken;
   }
@@ -117,15 +100,8 @@ export class TokenService {
     if (!user) {
       throw new NotFoundException('Email does not exist');
     }
-    const refreshPasswordToken = this.generateToken(
-      user,
-      this.configService.get(constants.JWT_RESET_PASSWORD_EXPIRATION),
-    );
-    return await this.saveToken(
-      refreshPasswordToken,
-      user,
-      TokenType.RefreshPasswordToken,
-    );
+    const refreshPasswordToken = this.generateToken(user, this.configService.get(constants.JWT_RESET_PASSWORD_EXPIRATION));
+    return await this.saveToken(refreshPasswordToken, user, TokenType.RefreshPasswordToken);
   }
   // deactivate refresh token
   async deactivateRefreshToken(email: string) {

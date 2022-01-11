@@ -33,6 +33,6 @@ import { ConversationModule } from './conversation/conversation.module';
     ConversationModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ChatGateway],
 })
 export class AppModule {}

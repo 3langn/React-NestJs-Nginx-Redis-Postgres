@@ -1,28 +1,11 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Logger,
-  Post,
-  Query,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiProperty,
-  ApiTags,
-} from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Get, HttpCode, Logger, Post, Query, Res, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { Response } from 'express';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { RolesGuard } from 'src/common/guards/roles.guard';
+import { Roles } from 'src/shared/decorators/roles.decorator';
+import { RolesGuard } from 'src/shared/guards/roles.guard';
 import { EmailService } from 'src/email/email.service';
-import { RolesEnum, TokenType } from '../common/constants/enum';
+import { RolesEnum, TokenType } from '../shared/constants/enum';
 import { TokenService } from '../token/token.service';
 import { UserLoginDto } from '../user/dto/user-login.dto';
 import { UserRegisterDto } from '../user/dto/user-register.dto';
@@ -59,7 +42,7 @@ export class AuthController {
     try {
       const user = await this.userService.createUserRegister(userRegisterDto);
       const emailToken = await this.tokenService.generateVerifyEmailToken(user);
-      await this.emailService.sendVerificationEmail({
+      this.emailService.sendVerificationEmail({
         to: userRegisterDto.email,
         token: emailToken,
       });
@@ -95,10 +78,7 @@ export class AuthController {
   @ApiOkResponse({ description: 'Success' })
   @Get('/verify-email')
   async verifyEmail(@Query('token') token: string, @Res() res: Response) {
-    const user = await this.tokenService.verifyToken(
-      token,
-      TokenType.VerifyEmailToken,
-    );
+    const user = await this.tokenService.verifyToken(token, TokenType.VerifyEmailToken);
     await this.authService.verifyEmail(user);
     res.redirect('http://localhost:3000');
   }
