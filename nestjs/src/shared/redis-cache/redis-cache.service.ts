@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { createClient, RedisClient } from 'redis';
 import { PostFields } from 'src/shared/constants/enum';
 
-import { PostEntity } from 'src/post/post';
+import { PostEntity } from 'src/post/entity/post';
 import { gzip, unzipSync } from 'zlib';
 
 @Injectable()

@@ -4,7 +4,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmailModule } from 'src/email/email.module';
-import { EmailService } from 'src/email/email.service';
 import { Tokens } from '../token/token.entity';
 import { TokenService } from '../token/token.service';
 import { UsersModule } from '../user/users.module';

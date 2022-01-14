@@ -17,6 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    this.logger.debug(`validate payload: ${JSON.stringify(payload)}`);
     const user = await this.userService.getOneUser(payload.sub);
     // if (!user.emailVerified) {
     //   throw new BadRequestException('Email not verified');

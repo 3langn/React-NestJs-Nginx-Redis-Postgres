@@ -13,8 +13,6 @@ import { RedisCacheModule } from './shared/redis-cache/redis-cache.module';
 import { ChatGateway } from './chat/chat.gateway';
 import { ChatModule } from './chat/chat.module';
 import { EmailModule } from './email/email.module';
-import { ConversationController } from './conversation/conversation.controller';
-import { ConversationService } from './conversation/conversation.service';
 import { ConversationModule } from './conversation/conversation.module';
 @Module({
   imports: [
