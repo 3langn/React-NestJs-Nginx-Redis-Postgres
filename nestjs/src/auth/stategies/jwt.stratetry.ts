@@ -11,13 +11,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly configService: ConfigService, private readonly userService: UserService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configService.get(constants.JWT_SECRET_KEY),
-      ignoreExpired: false,
+      secretOrKey: 'secret',
+      ignoreExpiration: false,
     });
   }
 
   async validate(payload: any) {
-    this.logger.debug(`validate payload: ${JSON.stringify(payload)}`);
     const user = await this.userService.getOneUser(payload.sub);
     // if (!user.emailVerified) {
     //   throw new BadRequestException('Email not verified');

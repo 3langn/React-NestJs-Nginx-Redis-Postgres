@@ -17,7 +17,10 @@ import { JwtStrategy } from './stategies/jwt.stratetry';
     UsersModule,
     EmailModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({}),
+    JwtModule.register({
+      secret: 'secret',
+      signOptions: { expiresIn: '60 minutes' },
+    }),
   ],
   providers: [AuthService, TokenService, JwtStrategy],
   controllers: [AuthController],

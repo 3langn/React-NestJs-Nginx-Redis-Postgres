@@ -1,11 +1,11 @@
-version: '3'
+version: "3"
 
 services:
   nginx:
     image: nginx:stable-alpine
     container_name: nginx
     ports:
-      - '8080:80'
+      - "8080:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
@@ -13,22 +13,20 @@ services:
       - node-app2
     networks:
       - mynetwork
-      
+
   redis:
     hostname: redis
     container_name: redis
     image: redis:6-alpine
     expose:
       - 6379
-    volumes:
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     restart: always
     environment:
       - REDIS_PORT=6379
       - REDIS_HOST=redis
     networks:
       - mynetwork
-      
+
   node-app1:
     image: node-app
     container_name: server-1
@@ -45,7 +43,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       PORT: 2222
-      NODE_ENV: 'production'
+      NODE_ENV: "production"
     depends_on:
       - postgresql-master
       - postgresql-slave1
@@ -71,7 +69,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       PORT: 3333
-      NODE_ENV: 'production'
+      NODE_ENV: "production"
     depends_on:
       - postgresql-master
       - postgresql-slave1
@@ -80,7 +78,7 @@ services:
     command: npm run start:dev
     networks:
       - mynetwork
-          
+
   frontend:
     image: frontend
     container_name: frontend
@@ -96,15 +94,15 @@ services:
     environment:
       - BACKEND_HOST=node-app2
     networks:
-      - mynetwork    
+      - mynetwork
 
   postgresql-master:
     image: docker.io/bitnami/postgresql:11
     container_name: pg-master
     ports:
-      - 5432:5432
+      - 5435:5432
     volumes:
-      - 'postgresql_master_data:/bitnami/postgresql'
+      - "postgresql_master_data:/bitnami/postgresql"
     environment:
       - POSTGRESQL_REPLICATION_MODE=master
       - POSTGRESQL_REPLICATION_USER=repl_user
@@ -115,7 +113,7 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
     networks:
       - mynetwork
-      
+
   postgresql-slave1:
     image: docker.io/bitnami/postgresql:11
     container_name: pg-slave1

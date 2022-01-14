@@ -20,8 +20,9 @@ export class TokenService {
   ) {}
 
   async generateAuthToken(user: UserEntity): Promise<TokenPayloadDto> {
-    const accessToken = this.generateToken(user, this.configService.get(constants.JWT_ACCESS_EXPIRATION));
-    const refreshToken = this.generateToken(user, this.configService.get(constants.JWT_REFRESH_EXPIRATION));
+    const accessToken = this.generateToken(user, constants.JWT_ACCESS_EXPIRATION);
+
+    const refreshToken = this.generateToken(user, constants.JWT_REFRESH_EXPIRATION);
     await this.saveToken(refreshToken, user, TokenType.RefreshToken);
     return {
       accessToken,
@@ -48,7 +49,6 @@ export class TokenService {
 
   generateToken(user: UserEntity, expires: string | number) {
     const payload = { sub: user.id };
-
     return this.jwtService.sign(payload, {
       expiresIn: expires,
       secret: this.configService.get(constants.JWT_SECRET_KEY),

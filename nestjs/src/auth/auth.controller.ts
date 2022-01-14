@@ -42,10 +42,10 @@ export class AuthController {
     try {
       const user = await this.userService.createUserRegister(userRegisterDto);
       const emailToken = await this.tokenService.generateVerifyEmailToken(user);
-      this.emailService.sendVerificationEmail({
-        to: userRegisterDto.email,
-        token: emailToken,
-      });
+      // this.emailService.sendVerificationEmail({
+      //   to: userRegisterDto.email,
+      //   token: emailToken,
+      // });
     } catch (error) {
       this.logger.error(error);
       throw new BadRequestException(error);
