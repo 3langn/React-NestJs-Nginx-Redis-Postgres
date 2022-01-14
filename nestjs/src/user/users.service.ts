@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 
 import { image } from 'faker';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,8 +6,8 @@ import { FindOneOptions, Repository } from 'typeorm';
 import { UserRegisterDto } from './dto/user-register.dto';
 import { UserEntity } from './user';
 import * as bcrypt from 'bcryptjs';
-import { PostEntity } from '../post/post';
-import { UserFollowerEntity } from 'src/entity/user-follow';
+import { PostEntity } from '../post/entity/post';
+import { UserFollowerEntity } from 'src/user/user-follow';
 @Injectable()
 export class UserService {
   private logger = new Logger(UserService.name);
@@ -54,18 +48,13 @@ export class UserService {
     return this.repo.save(user);
   }
 
-  async userCreatePost(
-    user: UserEntity,
-    post: PostEntity,
-  ): Promise<UserEntity> {
+  async userCreatePost(user: UserEntity, post: PostEntity): Promise<UserEntity> {
     user.posts = user.posts || [];
     user.posts.push(post);
     return this.repo.save(user);
   }
 
-  async createUserRegister(
-    userRegisterDto: UserRegisterDto,
-  ): Promise<UserEntity> {
+  async createUserRegister(userRegisterDto: UserRegisterDto): Promise<UserEntity> {
     const user = await this.repo.findOne({
       where: { email: userRegisterDto.email },
     });
@@ -188,9 +177,7 @@ export class UserService {
     if (!friend) {
       throw new NotFoundException('User not found');
     }
-    user.following = user.following.filter(
-      (friend: UserFollowerEntity) => friend?.id !== friendId,
-    );
+    user.following = user.following.filter((friend: UserFollowerEntity) => friend?.id !== friendId);
     this.repo.save(user);
   }
 }
