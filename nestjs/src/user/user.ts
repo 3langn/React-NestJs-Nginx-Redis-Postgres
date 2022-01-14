@@ -12,10 +12,10 @@ import * as bcrypt from 'bcryptjs';
 import { RolesEnum } from '../shared/constants/enum';
 import { Tokens } from '../token/token.entity';
 import { classToPlain, Exclude } from 'class-transformer';
-import { PostEntity } from '../post/post';
-import { LikeEntity } from '../entity/like';
-import { CommentEntity } from 'src/entity/comment';
-import { UserFollowerEntity } from 'src/entity/user-follow';
+import { PostEntity } from '../post/entity/post';
+import { LikeEntity } from '../post/entity/like';
+import { CommentEntity } from 'src/post/entity/comment';
+import { UserFollowerEntity } from 'src/user/user-follow';
 import { ConversationEntity } from 'src/conversation/entity/conversation';
 import { MessageEntity } from 'src/conversation/entity/message';
 @Entity('users')

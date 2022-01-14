@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Req, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CommentEntity } from 'src/entity/comment';
+import { CommentEntity } from 'src/post/entity/comment';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PostDto } from './dto/post-request.dto';
-import { PostEntity } from './post';
+import { PostEntity } from './entity/post';
 import { PostService } from './post.service';
 import { internet } from 'faker';
 

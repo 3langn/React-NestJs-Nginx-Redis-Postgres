@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOneOptions, In, Repository } from 'typeorm';
 import { UserEntity } from '../user/user';
 import { PostDto } from './dto/post-request.dto';
-import { PostEntity } from './post';
-import { LikeEntity } from 'src/entity/like';
-import { CommentEntity } from 'src/entity/comment';
+import { PostEntity } from './entity/post';
+import { LikeEntity } from 'src/post/entity/like';
+import { CommentEntity } from 'src/post/entity/comment';
 import { RedisCacheService } from 'src/shared/redis-cache/redis-cache.service';
 import { PostFields } from 'src/shared/constants/enum';
 
